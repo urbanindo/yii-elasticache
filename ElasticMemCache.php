@@ -18,6 +18,7 @@ namespace Urbanindo\Yii\Component\Cache;
 class ElasticMemCache extends \CMemCache
 {
     private $_cache = null;
+    public $cacheTime = 60;
 
     public function setCache($config) {
         if ($config) {
@@ -47,7 +48,7 @@ class ElasticMemCache extends \CMemCache
                     $cachedConfig = $this->createConfigs($raw, $server);
                 }
                 if ($cacheable) {
-                    $this->getCache()->set('clusters', $cachedConfig, 60);
+                    $this->getCache()->set('clusters', $cachedConfig, $cacheTime);
                 }
             }
         catch (\Exception $ex) {
