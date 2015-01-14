@@ -1,7 +1,7 @@
 <?php
 
 /**
- * Fluentd Log Route class file.
+ * ElasticMemCache class file.
  * 
  * @author Adinata <mail.dieend@gmail.com>
  * @since 2014.12.09
@@ -10,7 +10,7 @@
 namespace Urbanindo\Yii\Component\Cache;
 
 /**
- * Log route using fluentd.
+ * Auto discovery of ElastiCache Node.
  *
  * @author Adinata <mail.dieend@gmail.com>
  * @since 2014.12.09
