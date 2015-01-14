@@ -30,26 +30,30 @@ class ElasticMemCache extends \CMemCache
 
     public function getServers()
     {
-        $cacheable = null != $this->getCache();
-        if ($cacheable) {
-            $cachedConfig = $this->getCache()->get('clusters');
-        }
-        if (!$cacheable || !$cachedConfig){
-            $servers = parent::getServers();
-            foreach ($servers as $server) {
-                $fp = fsockopen($server->host, $server->port);
-                fwrite($fp, "config get cluster\r\n");
-                $raw = '';
-                while(substr($raw,-5,3)!=='END'){
-                     $raw .= fgets($fp, 1024);
-                }
-                $cachedConfig = $this->createConfigs($raw, $server);
-            }
+        try {
+            $cacheable = null != $this->getCache();
             if ($cacheable) {
-                $this->getCache()->set('clusters', $cachedConfig, 60);
+                $cachedConfig = $this->getCache()->get('clusters');
             }
+            if (!$cacheable || !$cachedConfig){
+                $servers = parent::getServers();
+                foreach ($servers as $server) {
+                    $fp = fsockopen($server->host, $server->port);
+                    fwrite($fp, "config get cluster\r\n");
+                    $raw = '';
+                    while(substr($raw,-5,3)!=='END'){
+                         $raw .= fgets($fp, 1024);
+                    }
+                    $cachedConfig = $this->createConfigs($raw, $server);
+                }
+                if ($cacheable) {
+                    $this->getCache()->set('clusters', $cachedConfig, 60);
+                }
+            }
+        catch (\Exception $ex) {
+            \Yii::log('unable to retrieve cluster configuration. Defaults to server configuration', \CLogger::LEVEL_WARNING);
         }
-        return $cachedConfig;
+        return parent::getServers();
     }
 
     public function createConfigs($response, $parentConfig) {
