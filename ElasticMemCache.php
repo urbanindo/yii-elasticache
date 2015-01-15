@@ -34,22 +34,18 @@ class ElasticMemCache extends \CMemCache
     }
 
     public function setServerConfigs($configs) {
-        $this->_serverConfigs = [];
         foreach ($configs as $config) {
-            $this->_serverConfigs[] = new \CMemCacheServerConfiguration($config);
+            if (!$config['host']) {
+                throw new \Exception('Host configuration need to be set.');
+            }
         }
+        $this->_serverConfigs = $configs;
     }
 
     public function getServerConfigs() {
         return $this->_serverConfigs;
     }
 
-    public function getServers() {
-        return $this->_servers;
-    }
-    public function setServers($configs) {
-        $this->_servers = $configs;
-    }
     public function init()
     {
         $this->setServers($this->loadNodes());
@@ -67,13 +63,14 @@ class ElasticMemCache extends \CMemCache
                 $servers = $this->getServerConfigs();
                 $cachedConfig = [];
                 foreach ($servers as $server) {
-                    $fp = fsockopen($server->host, $server->port);
+                    $fp = fsockopen($server['host'], $server['port']);
                     fwrite($fp, "config get cluster\r\n");
                     $raw = '';
                     while(substr($raw,-5,3)!=='END'){
                          $raw .= fgets($fp, 1024);
                     }
-                    $cachedConfig = array_merge($this->createConfigs($raw, $server));
+                    fclose($fp);
+                    $cachedConfig = array_merge($cachedConfig,$this->createConfigs($raw, $server));
                 }
                 if ($cacheable) {
                     $this->getCache()->set('clusters', $cachedConfig, $cacheTime);
@@ -90,12 +87,14 @@ class ElasticMemCache extends \CMemCache
         $allConfigs = [];
         $configs = explode("\n",$response)[2];
         $configs = preg_split ("/\s+/", $configs);
-        $parentConfig = get_object_vars( $parentConfig );
         foreach ($configs as $config) {
             $config = explode('|', $config);
-            $parentConfig['host'] = $config[0];
-            $parentConfig['port'] = $config[2];
-            $copyConfig = new \CMemCacheServerConfiguration($parentConfig);
+            $copyConfig = [];
+            foreach ($parentConfig as $key => $value) {
+                $copyConfig[$key] = $value;
+            }
+            $copyConfig['host'] = $config[0];
+            $copyConfig['port'] = $config[2];
             $allConfigs[] = $copyConfig;
         }
         return $allConfigs;
