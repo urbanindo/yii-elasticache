@@ -73,7 +73,7 @@ class ElasticMemCache extends \CMemCache
                     $cachedConfig = array_merge($cachedConfig,$this->createConfigs($raw, $server));
                 }
                 if ($cacheable) {
-                    $this->getCache()->set('clusters', $cachedConfig, $cacheTime);
+                    $this->getCache()->set('clusters', $cachedConfig, $this->cacheTime);
                 }
             }
             return $cachedConfig;
